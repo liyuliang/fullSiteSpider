@@ -2,6 +2,7 @@ package: fullSiteSpider
 import:
 - package: github.com/BurntSushi/toml
   version: ^0.3.1
+- package: github.com/liyuliang/queue-services
 - package: github.com/liyuliang/utils
   subpackages:
   - cli
