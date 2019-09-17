@@ -1,5 +1,5 @@
-hash: b71aae5b7b525d3e54cc877d96af42233048d6cbe24ca0ef4523f1a9f57a8100
-updated: 2019-09-17T16:06:43.043537676+08:00
+hash: 1c1efd5d56ee7eb8b328d0c7f49bf3f23250bf9067fa6e14aa5dbc56411dbf66
+updated: 2019-09-17T16:26:20.24805179+08:00
 imports:
 - name: github.com/BurntSushi/toml
   version: 3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005
@@ -7,6 +7,8 @@ imports:
   version: 9c11da706d9b7902c6da69c592f75637793fe121
   subpackages:
   - redis
+- name: github.com/liyuliang/dom-parser
+  version: 83d71ce6d1ecea5f302d19547374b05c88b723b9
 - name: github.com/liyuliang/queue-services
   version: a92fbb43f67c9bb34d66095056a557ad71884153
 - name: github.com/liyuliang/utils

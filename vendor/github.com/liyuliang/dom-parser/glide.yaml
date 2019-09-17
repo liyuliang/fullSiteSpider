@@ -1,0 +1,9 @@
+package: dom-parser
+import:
+- package: github.com/PuerkitoBio/goquery
+  version: ^1.1.0
+- package: golang.org/x/net
+  version: master
+  repo: https://github.com/golang/net.git
+  vcs: git
+- package: github.com/andybalholm/cascadia
