@@ -7,5 +7,7 @@ import:
   subpackages:
   - cli
   - path
-- package: github.com/garyburd/redigo
-  version: ^1.6.0
+- package: github.com/gomodule/redigo
+  version: ^2.0.0
+  subpackages:
+  - redis
