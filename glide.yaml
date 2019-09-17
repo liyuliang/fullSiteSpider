@@ -7,5 +7,3 @@ import:
   subpackages:
   - cli
   - path
-- package: github.com/patrickmn/go-cache
-  version: ^2.1.0
