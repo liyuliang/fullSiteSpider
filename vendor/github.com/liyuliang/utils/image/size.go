@@ -1,0 +1,50 @@
+package image
+
+import "os"
+
+func GifSize(file *os.File) (width int, height int) {
+	bytes := make([]byte, 4)
+	file.ReadAt(bytes, 6)
+	width = int(bytes[0]) + int(bytes[1])*256
+	height = int(bytes[2]) + int(bytes[3])*256
+	return
+}
+
+func BmpSize(file *os.File) (width int, height int) {
+	bytes := make([]byte, 8)
+	file.ReadAt(bytes, 18)
+	width = int(bytes[3])<<24 | int(bytes[2])<<16 | int(bytes[1])<<8 | int(bytes[0])
+	height = int(bytes[7])<<24 | int(bytes[6])<<16 | int(bytes[5])<<8 | int(bytes[4])
+	return
+}
+
+func PngSize(file *os.File) (width int, height int) {
+	bytes := make([]byte, 8)
+	file.ReadAt(bytes, 16)
+	width = int(bytes[0])<<24 | int(bytes[1])<<16 | int(bytes[2])<<8 | int(bytes[3])
+	height = int(bytes[4])<<24 | int(bytes[5])<<16 | int(bytes[6])<<8 | int(bytes[7])
+	return
+}
+
+func JpgSize(file *os.File) (width int, height int) {
+	fi, _ := file.Stat()
+	fileSize := fi.Size()
+
+	position := int64(4)
+	bytes := make([]byte, 4)
+	file.ReadAt(bytes[:2], position)
+	length := int(bytes[0]<<8) + int(bytes[1])
+	for position < fileSize {
+		position += int64(length)
+		file.ReadAt(bytes, position)
+		length = int(bytes[2])<<8 + int(bytes[3])
+		if (bytes[1] == 0xC0 || bytes[1] == 0xC2) && bytes[0] == 0xFF && length > 7 {
+			file.ReadAt(bytes, position+5)
+			width = int(bytes[2])<<8 + int(bytes[3])
+			height = int(bytes[0])<<8 + int(bytes[1])
+			return
+		}
+		position += 2
+	}
+	return 0, 0
+}
