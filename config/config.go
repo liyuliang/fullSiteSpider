@@ -11,6 +11,7 @@ const appConfigFile string = "config.toml"
 type appConfig struct {
 	VERSION string
 	WEB     web
+	SPIDER  spider
 }
 
 var _appConfigFilePath string

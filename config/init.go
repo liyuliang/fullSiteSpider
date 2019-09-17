@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/liyuliang/utils/cli"
-	"log"
 )
 
 func Init() {
