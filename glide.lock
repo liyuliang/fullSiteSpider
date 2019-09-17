@@ -1,0 +1,13 @@
+hash: ed27fd6953fac0e4910818ba78253ca6da7c5ca3418090e23ccb4ccc21e7092b
+updated: 2019-09-17T14:07:18.078325351+08:00
+imports:
+- name: github.com/BurntSushi/toml
+  version: 3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005
+- name: github.com/liyuliang/queue-services
+  version: a92fbb43f67c9bb34d66095056a557ad71884153
+- name: github.com/liyuliang/utils
+  version: cdeb9c4f8ad03d9dda49e181843debf3878b51de
+  subpackages:
+  - cli
+  - path
+testImports: []
