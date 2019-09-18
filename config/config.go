@@ -12,6 +12,8 @@ type appConfig struct {
 	VERSION string
 	WEB     web
 	SPIDER  spider
+	TASK   task
+
 }
 
 var _appConfigFilePath string

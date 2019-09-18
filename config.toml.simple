@@ -3,5 +3,18 @@ version = "1.0"
 [web]
 port = "8888"
 
+[redis]
+name = "redis"
+server = "127.0.0.1"
+ports = [ 6379 ]
+connection_max_second = 240
+max_idle = 3
+password = ""
+enabled = true
+db_number = 1
+
 [spider]
 keywords = ["关键词1","关键词2","关键词3"]
+
+[task]
+homes = ["https://www.baidu.com/1","https://www.baidu.com/1"]
