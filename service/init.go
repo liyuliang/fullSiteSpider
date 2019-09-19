@@ -17,7 +17,7 @@ import (
 
 const WaitCrawlerQueue = "WAIT_CRAWLER_QUEUE"
 const WaitEmailQueue = "WAIT_SEND_EMAIL_QUEUE"
-const EmailSendedList = "EMAIL_SEND_LIST"
+const EmailSentList = "EMAIL_SEND_LIST"
 
 var EmptyQueueErr = errors.New("Empty queue")
 var ThirdPartyErr = errors.New("third party url")
@@ -45,19 +45,24 @@ func Init() {
 
 	services.AddSingleProcessTask("send email...", func(workerNum int) (err error) {
 
-		mailTo, title, uri := popEmailSendQueue()
+		mailTo, title, uri := popEmailSendQueue(WaitEmailQueue)
 		if mailTo != "" && title != "" && uri != "" {
 			content := toMailContent(title, uri)
 
 			err = sendEmail(mailTo, content)
 
 			if err == nil {
-				recordEmailSended(uri, title)
+				recordEmailSent(uri, title)
 			}
 		}
 
 		return err
 	})
+}
+
+func recordEmailSent(uri string, title string) {
+	r := storage.Redis()
+	r.HSet(EmailSentList, uri, title)
 }
 
 func sendEmail(mailTo string, body string) error {
@@ -186,7 +191,7 @@ func isThirdPartyUrl(uri string) bool {
 }
 
 func checkAndSendEmail(uri string, title string) {
-	if hasEmailSended(uri) {
+	if hasEmailSent(EmailSentList, uri) {
 		return
 	}
 
@@ -200,29 +205,53 @@ func checkAndSendEmail(uri string, title string) {
 		for _, keyword := range task.Keywords {
 			if strings.Contains(title, keyword) {
 
-				addSendEmailQueue(task.EmailTo, title, uri)
+				addSendEmailQueue(WaitEmailQueue, task.EmailTo, title, uri)
 
 				break
 			}
 		}
 	}
 }
-
-func addSendEmailQueue(emailTo string, title string, uri string) {
-
+func hasEmailSent(queue, uri string) bool {
+	r := storage.Redis()
+	return r.Hexists(queue, uri)
 }
 
-func popEmailSendQueue() (emailTo, title, uri string) {
+func addSendEmailQueue(queue string, emailTo string, title string, uri string) {
+	content := strings.Join([]string{
+		emailTo,
+		title,
+		uri,
+	}, `,`)
+
+	r := storage.Redis()
+	r.LPush(queue, content)
+}
+
+func popEmailSendQueue(queue string) (emailTo, title, uri string) {
+	r := storage.Redis()
+	content, err := r.RPop(queue)
+	if err == nil {
+		emailTo = strings.Split(content, `,`)[0]
+		title = strings.Split(content, `,`)[1]
+		uri = strings.Split(content, `,`)[2]
+	}
+	return
 
 }
 
 func addQueue(queue string, uri string) {
 	uri = removeHashTag(uri)
 
+	r := storage.Redis()
+	r.LPush(queue, uri)
 }
 
 func popQueue(queue string) (uri string) {
 
+	r := storage.Redis()
+	uri, _ = r.RPop(queue)
+	return
 }
 
 func formatUrl(uri string) string {

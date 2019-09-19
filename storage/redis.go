@@ -125,6 +125,14 @@ func (db *redisCache) HSet(key, field, value string) (err error) {
 	return err
 }
 
+func (db *redisCache) Hexists(key, field string) (bool) {
+	result, err := db.do("HEXISTS", key, field)
+	if err == nil && result == 1 {
+		return true
+	}
+	return false
+}
+
 func (db *redisCache) HMSet(key string, keyVal []string) (err error) {
 
 	args := []interface{}{}
