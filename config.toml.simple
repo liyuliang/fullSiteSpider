@@ -13,8 +13,8 @@ password = ""
 enabled = true
 db_number = 1
 
-[spider]
-keywords = ["关键词1","关键词2","关键词3"]
-
-[task]
-homes = ["https://www.baidu.com/1","https://www.baidu.com/1"]
+[tasks]
+    [tasks.domain1]
+    url = "https://www.baidu.com/1"
+    keywords = ["关键词1","关键词2","关键词3"]
+    emailto = "1111@qq.com"

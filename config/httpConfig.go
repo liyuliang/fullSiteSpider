@@ -6,5 +6,5 @@ type web struct {
 
 func Web() web {
 
-	return getConfig().WEB
+	return getConfig().Web
 }

@@ -9,11 +9,10 @@ import (
 const appConfigFile string = "config.toml"
 
 type appConfig struct {
-	VERSION string
-	WEB     web
-	SPIDER  spider
-	TASK   task
-
+	Version string
+	Web     web
+	Redis   redis
+	Tasks   map[string]task
 }
 
 var _appConfigFilePath string
@@ -51,7 +50,7 @@ func SetAppConfigFilePath(path string) {
 }
 
 func getConfig() appConfig {
-	if _appConfig.VERSION == "" {
+	if _appConfig.Version == "" {
 		initConfig()
 	}
 	return _appConfig
