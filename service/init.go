@@ -4,12 +4,15 @@ import (
 	"github.com/liyuliang/queue-services"
 	"fullSiteSpider/storage"
 	"github.com/liyuliang/utils/regex"
+	"github.com/liyuliang/dom-parser"
 	"github.com/pkg/errors"
 	"fullSiteSpider/config"
 	"log"
 	"time"
 	"net/url"
 	"strings"
+	"github.com/liyuliang/utils/request"
+	"net/smtp"
 )
 
 const WaitCrawlerQueue = "WAIT_CRAWLER_QUEUE"
@@ -56,6 +59,34 @@ func Init() {
 		return err
 	})
 }
+
+func sendEmail(mailTo string, body string) error {
+	to := []string{mailTo}
+
+	from := config.Mail().Account
+	password := config.Mail().Password
+	smtpPort := config.Mail().Port
+	smtpHost := config.Mail().SmtpHost
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	user := from
+
+	nickname := "发送人名称"
+	subject := "邮件通知"
+	contentType := "Content-Type: text/plain; charset=UTF-8"
+
+	msg := []byte("To: " + strings.Join(to, ",") + "\r\nFrom: " + nickname +
+		"<" + user + ">\r\nSubject: " + subject + "\r\n" + contentType + "\r\n\r\n" + body)
+
+	err := smtp.SendMail(smtpHost+smtpPort, auth, user, to, msg)
+	return err
+}
+
+func toMailContent(title string, uri string) string {
+	return "<a href=\"" + uri + "\">" + title + "</a>"
+}
+
 func initTaskDomains() {
 
 	for _, task := range config.Tasks() {
@@ -70,23 +101,38 @@ func initTasks() {
 	}
 }
 
+func getTaskByUrl(uri string) (task config.Task) {
+	for name, t := range config.Tasks() {
+		domain := strings.Replace(name, "task.", "", -1)
+
+		if strings.Contains(uri, domain) {
+			task = t
+			break
+		}
+	}
+	return task
+}
+
 func spiderRun(uri string) error {
+
+	task := getTaskByUrl(uri)
 
 	if isThirdPartyUrl(uri) {
 		return ThirdPartyErr
 	}
 
 	dom, err := parseHtml(uri)
-	defer func() {
-		dom.Close()
-	}()
+
+	//defer func() {
+	//	dom.Close()
+	//}()
 
 	if err != nil {
 		return err
 	}
 
-	title := getTitle(dom)
-	hrefs := getHrefs(dom)
+	title := getTitle(dom, task)
+	hrefs := getHrefs(dom, task)
 
 	r := storage.Redis()
 
@@ -101,6 +147,30 @@ func spiderRun(uri string) error {
 			addQueue(WaitCrawlerQueue, href)
 		}
 	}
+}
+func getHrefs(dom *parser.Dom, task config.Task) (hrefs []string) {
+
+	for _, a := range dom.FindAll(task.HrefsSelector) {
+		h, ok := a.Attr("href")
+		if ok {
+			hrefs = append(hrefs, h)
+		}
+	}
+	return hrefs
+}
+
+func getTitle(dom *parser.Dom, task config.Task) string {
+
+	return dom.Find(task.TitleSelector).Text()
+}
+
+func parseHtml(uri string) (*parser.Dom, error) {
+	resp := request.HttpGet(uri)
+	if resp.Err != nil {
+		return nil, resp.Err
+	}
+
+	return parser.InitDom(resp.Data)
 }
 
 func isThirdPartyUrl(uri string) bool {

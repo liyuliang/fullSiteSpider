@@ -18,3 +18,11 @@ db_number = 1
     url = "https://www.baidu.com/1"
     keywords = ["关键词1","关键词2","关键词3"]
     emailto = "1111@qq.com"
+    titleSelector = ""
+    hrefsSelector = ""
+
+[mail]
+account = "aaaa@qq.com"
+password = "xxxx"
+port = ":587"
+smtp_host="smtp.qq.com"

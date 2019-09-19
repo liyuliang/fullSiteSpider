@@ -12,7 +12,8 @@ type appConfig struct {
 	Version string
 	Web     web
 	Redis   redis
-	Tasks   map[string]task
+	Tasks   map[string]Task
+	Mail mail
 }
 
 var _appConfigFilePath string
