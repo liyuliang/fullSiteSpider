@@ -9,10 +9,10 @@ import (
 	"fullSiteSpider/config"
 	"log"
 	"time"
-	"net/url"
 	"strings"
 	"github.com/liyuliang/utils/request"
 	"net/smtp"
+	"os"
 )
 
 const WaitCrawlerQueue = "WAIT_CRAWLER_QUEUE"
@@ -22,18 +22,15 @@ const EmailSentList = "EMAIL_SEND_LIST"
 var EmptyQueueErr = errors.New("Empty queue")
 var ThirdPartyErr = errors.New("third party url")
 
-var taskDomains []string
-
 func Init() {
 
 	initTasks()
-	initTaskDomains()
 
 	services.AddMultiProcessTask("spider run...", func(workerNum int) (err error) {
 
-		url := popQueue(WaitCrawlerQueue)
-		if url != "" {
-			spiderRun(url)
+		uri := popQueue(WaitCrawlerQueue)
+		if uri != "" {
+			spiderRun(uri)
 			return
 
 		} else {
@@ -92,14 +89,6 @@ func toMailContent(title string, uri string) string {
 	return "<a href=\"" + uri + "\">" + title + "</a>"
 }
 
-func initTaskDomains() {
-
-	for _, task := range config.Tasks() {
-		u, _ := url.Parse(task.Url)
-		taskDomains = append(taskDomains, u.Hostname())
-	}
-}
-
 func initTasks() {
 	for _, task := range config.Tasks() {
 		addQueue(WaitCrawlerQueue, task.Url)
@@ -107,10 +96,9 @@ func initTasks() {
 }
 
 func getTaskByUrl(uri string) (task config.Task) {
-	for name, t := range config.Tasks() {
-		domain := strings.Replace(name, "task.", "", -1)
+	for _, t := range config.Tasks() {
 
-		if strings.Contains(uri, domain) {
+		if strings.Contains(strings.ToLower(uri), strings.ToLower(t.Domain())) {
 			task = t
 			break
 		}
@@ -118,7 +106,7 @@ func getTaskByUrl(uri string) (task config.Task) {
 	return task
 }
 
-func spiderRun(uri string) error {
+func spiderRun(uri string) (err error) {
 
 	task := getTaskByUrl(uri)
 
@@ -139,6 +127,9 @@ func spiderRun(uri string) error {
 	title := getTitle(dom, task)
 	hrefs := getHrefs(dom, task)
 
+	log.Println(title)
+	log.Println(hrefs)
+	os.Exit(-1)
 	r := storage.Redis()
 
 	titleRecord, _ := r.Get(uri)
@@ -152,16 +143,27 @@ func spiderRun(uri string) error {
 			addQueue(WaitCrawlerQueue, href)
 		}
 	}
+	return
 }
 func getHrefs(dom *parser.Dom, task config.Task) (hrefs []string) {
 
 	for _, a := range dom.FindAll(task.HrefsSelector) {
 		h, ok := a.Attr("href")
 		if ok {
+			h = addHost(h, task.TitleSelector)
+
 			hrefs = append(hrefs, h)
 		}
 	}
 	return hrefs
+}
+
+func addHost(uri string, host string) string {
+	uri = formatUrl(uri)
+	if !strings.Contains(uri, "https://") && !strings.Contains(uri, "http://") {
+		uri = host + uri
+	}
+	return uri
 }
 
 func getTitle(dom *parser.Dom, task config.Task) string {
@@ -181,8 +183,8 @@ func parseHtml(uri string) (*parser.Dom, error) {
 func isThirdPartyUrl(uri string) bool {
 
 	isThirdParty := true
-	for _, domain := range taskDomains {
-		if strings.Contains(uri, domain) {
+	for _, t := range config.Tasks() {
+		if strings.Contains(strings.ToLower(uri), strings.ToLower(t.Domain())) {
 			isThirdParty = false
 			break
 		}
@@ -256,6 +258,7 @@ func popQueue(queue string) (uri string) {
 
 func formatUrl(uri string) string {
 	uri = removeHashTag(uri)
+	uri = strings.Replace(uri, "../../", "/", -1)
 	return uri
 }
 

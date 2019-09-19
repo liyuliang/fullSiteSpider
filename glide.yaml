@@ -12,3 +12,15 @@ import:
   subpackages:
   - redis
 - package: github.com/liyuliang/dom-parser
+- package: golang.org/x/crypto
+  version: master
+  repo: https://github.com/golang/crypto.git
+  vcs: git
+- package: golang.org/x/sys
+  version: master
+  repo: https://github.com/golang/sys.git
+  vcs: git
+- package: golang.org/x/text
+  version: master
+  repo: https://github.com/golang/text.git
+  vcs: git%
